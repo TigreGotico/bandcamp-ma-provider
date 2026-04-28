@@ -1,0 +1,11 @@
+{
+  "type": "music",
+  "domain": "bandcamp_free",
+  "name": "Bandcamp (no login)",
+  "description": "Search and stream free/name-your-price Bandcamp tracks without credentials via py_bandcamp.",
+  "codeowners": ["@TigreGotico"],
+  "stage": "beta",
+  "requirements": ["py_bandcamp"],
+  "documentation": "https://github.com/TigreGotico/plugin-manager",
+  "multi_instance": false
+}
