@@ -1,6 +1,6 @@
 # bandcamp-ma-provider
 
-[Music Assistant](https://music-assistant.io) provider for [Bandcamp](https://bandcamp.com) — search and stream free and name-your-price tracks without a Bandcamp account, via [`py_bandcamp`](https://github.com/TigreGotico/py_bandcamp).
+[Music Assistant](https://music-assistant.io) provider for [Bandcamp](https://bandcamp.com). It searches and streams free and name-your-price tracks without a Bandcamp account, using [`py_bandcamp`](https://github.com/TigreGotico/py_bandcamp).
 
 | Provider domain | Content |
 |---|---|
@@ -47,7 +47,7 @@ mass-pm
 
 In Music Assistant: **Settings → Providers → Bandcamp (no login) → +**
 
-No configuration fields — click + and you're done.
+There are no configuration fields. Click + to enable the provider.
 
 ---
 
@@ -115,7 +115,7 @@ Stream resolution results are cached for 10 minutes (`@use_cache(600)`) because 
 | `Album` (type=SINGLE) | Single (track page with no parent album) | `https://<artist>.bandcamp.com/track/<slug>` |
 | `Artist` | Artist / label | `https://<artist>.bandcamp.com` |
 
-Item IDs are always full Bandcamp URLs. This makes `get_album()` and `get_artist()` trivial — the URL is passed straight to `py_bandcamp`.
+Item IDs are always full Bandcamp URLs. This lets `get_album()` and `get_artist()` pass the URL straight to `py_bandcamp`.
 
 ### Methods
 
@@ -136,7 +136,7 @@ Item IDs are always full Bandcamp URLs. This makes `get_album()` and `get_artist
 
 Bandcamp track and album URLs encode the artist: `https://<artist>.bandcamp.com/track/<slug>`. The helpers `_artist_url_from_track()` and `_artist_item_id()` extract the base URL (`https://<artist>.bandcamp.com`) and use it as the artist's `item_id`. This means clicking an artist from a track result correctly navigates to their full artist page without an extra lookup.
 
-If the artist URL cannot be derived (e.g. the URL does not contain `/track/` or `/album/`), the artist name string is used as item_id instead — lookups for those artists will fail gracefully.
+If the artist URL cannot be derived (for example, the URL does not contain `/track/` or `/album/`), the artist name string is used as item_id instead. Lookups for those artists then fail without crashing the provider.
 
 ### Singles vs. albums
 
@@ -172,7 +172,7 @@ async def get_stream_details(self, item_id: str, media_type: MediaType) -> Strea
     ...
 ```
 
-`use_cache` is MA's built-in cache decorator backed by its internal cache controller. A TTL of 600 seconds (10 minutes) covers normal listening sessions — Bandcamp stream URLs expire faster than that but are stable within a session.
+`use_cache` is MA's built-in cache decorator, backed by its internal cache controller. A TTL of 600 seconds (10 minutes) covers normal listening sessions. Bandcamp stream URLs expire faster than that, but stay stable within a session.
 
 The guard `if not stream_url or stream_url == item_id` catches the case where `py_bandcamp` returns the original page URL unchanged (what happens when no free stream is available), which would otherwise cause an infinite redirect loop in MA's player.
 
@@ -255,7 +255,7 @@ print(url)   # direct MP3 URL, or the page URL if not freely streamable
 To add, for example, `ProviderFeature.LIBRARY_TRACKS`:
 
 1. Add `ProviderFeature.LIBRARY_TRACKS` to `SUPPORTED_FEATURES`.
-2. Implement `async def get_library_tracks(self)` — requires some notion of a user library, which Bandcamp does not expose publicly. This is a placeholder example.
+2. Implement `async def get_library_tracks(self)`. This requires a user library concept, which Bandcamp does not expose publicly. This step is a placeholder example.
 
 In practice, useful additions are more likely `ProviderFeature.BROWSE` extensions (e.g. genre sub-folders, new release feeds) using Bandcamp's tag and discover APIs.
 
