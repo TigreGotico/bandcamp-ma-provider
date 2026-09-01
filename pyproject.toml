@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bandcamp-ma-provider"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Bandcamp provider for Music Assistant via py_bandcamp (no login required)"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = ["music-assistant-plugin-manager", "music-assistant-models>=1.1.206",
     "py_bandcamp"]
 
@@ -17,6 +17,9 @@ test = ["pytest", "pytest-asyncio"]
 
 [project.entry-points."music_assistant.provider"]
 bandcamp_free = "bandcamp_ma_provider"
+
+[tool.setuptools.dynamic]
+version = { attr = "bandcamp_ma_provider.version.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["bandcamp_ma_provider*"]
