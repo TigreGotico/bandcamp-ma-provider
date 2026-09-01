@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "bandcamp-ma-provider"
 version = "0.1.0"
 description = "Bandcamp provider for Music Assistant via py_bandcamp (no login required)"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["music-assistant-plugin-manager", "py_bandcamp"]
 
@@ -17,3 +19,7 @@ include = ["bandcamp_ma_provider*"]
 
 [tool.setuptools.package-data]
 bandcamp_ma_provider = ["manifest.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+asyncio_mode = "auto"

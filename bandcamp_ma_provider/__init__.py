@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 
 SUPPORTED_FEATURES = {
     ProviderFeature.SEARCH,
+    ProviderFeature.BROWSE,
     ProviderFeature.ARTIST_ALBUMS,
     ProviderFeature.ARTIST_TOPTRACKS,
     ProviderFeature.RECOMMENDATIONS,
@@ -125,9 +126,8 @@ def _track_from_bc(t, domain: str, instance_id: str, artist_override: str | None
 
 
 def _album_from_bc(alb, domain: str, instance_id: str) -> Album:
-    from py_bandcamp.models import BandcampSingle  # noqa: PLC0415
     url = str(alb)
-    is_single = isinstance(alb, BandcampSingle) or "/track/" in url
+    is_single = "/track/" in url
     album = Album(
         item_id=url,
         provider=domain,
@@ -140,7 +140,12 @@ def _album_from_bc(alb, domain: str, instance_id: str) -> Album:
     img = _image(alb.image, instance_id)
     if img:
         album.metadata.images = UniqueList([img])
-    tags = getattr(alb, "tags", None) or getattr(alb, "keywords", None) or []
+    tags = (
+        getattr(alb, "tags", None)
+        or getattr(alb, "keywords", None)
+        or (alb.data.get("keywords") if hasattr(alb, "data") else None)
+        or []
+    )
     if tags:
         album.metadata.genres = set(tags)
     artist_raw = getattr(alb, "artist", None) or (alb.data.get("artist") if hasattr(alb, "data") else None) or ""
@@ -227,25 +232,37 @@ class BandcampFreeProvider(MusicProvider):
     async def get_track(self, prov_track_id: str) -> Track:
         from py_bandcamp.utils import get_stream_data  # noqa: PLC0415
         from py_bandcamp.models import BandcampTrack  # noqa: PLC0415
-        data = await asyncio.to_thread(get_stream_data, prov_track_id)
-        t = BandcampTrack({"url": prov_track_id, **data}, parse=False)
+        try:
+            data = await asyncio.to_thread(get_stream_data, prov_track_id)
+            t = BandcampTrack({"url": prov_track_id, **data}, parse=False)
+        except Exception as err:
+            raise MediaNotFoundError(f"Track not found: {prov_track_id}") from err
         return _track_from_bc(t, self.domain, self.instance_id)
 
     async def get_album(self, prov_album_id: str) -> Album:
-        from py_bandcamp.models import BandcampAlbum, BandcampSingle  # noqa: PLC0415
-        if "/track/" in prov_album_id:
-            alb = await asyncio.to_thread(BandcampSingle.from_url, prov_album_id)
-        else:
-            alb = await asyncio.to_thread(BandcampAlbum.from_url, prov_album_id)
+        from py_bandcamp.models import BandcampAlbum, BandcampTrack  # noqa: PLC0415
+        try:
+            if "/track/" in prov_album_id:
+                # a Bandcamp "single" is served from a /track/ url; py_bandcamp has no
+                # dedicated single/EP model, so treat it as its underlying track page.
+                alb = await asyncio.to_thread(BandcampTrack.from_url, prov_album_id)
+            else:
+                alb = await asyncio.to_thread(BandcampAlbum.from_url, prov_album_id)
+        except Exception as err:
+            raise MediaNotFoundError(f"Album not found: {prov_album_id}") from err
         return _album_from_bc(alb, self.domain, self.instance_id)
 
     async def get_album_tracks(self, prov_album_id: str) -> list[Track]:
-        from py_bandcamp.models import BandcampAlbum, BandcampSingle  # noqa: PLC0415
+        from py_bandcamp.models import BandcampAlbum, BandcampTrack  # noqa: PLC0415
 
         def _do():
             if "/track/" in prov_album_id:
-                single = BandcampSingle.from_url(prov_album_id)
-                return single.tracks, single.artist or ""
+                # a Bandcamp "single" is served from a /track/ url and is its own
+                # sole track; py_bandcamp has no dedicated single/EP model.
+                t = BandcampTrack.from_url(prov_album_id)
+                artist_raw = getattr(t, "artist", None) or ""
+                artist_name = artist_raw if isinstance(artist_raw, str) else getattr(artist_raw, "name", "")
+                return [t], artist_name
             alb = BandcampAlbum.from_url(prov_album_id)
             artist_raw = alb.data.get("artist") or ""
             artist_name = artist_raw if isinstance(artist_raw, str) else getattr(artist_raw, "name", "")
@@ -256,7 +273,10 @@ class BandcampFreeProvider(MusicProvider):
 
     async def get_artist(self, prov_artist_id: str) -> Artist:
         from py_bandcamp.models import BandcampArtist  # noqa: PLC0415
-        art = await asyncio.to_thread(BandcampArtist.from_url, prov_artist_id)
+        try:
+            art = await asyncio.to_thread(BandcampArtist.from_url, prov_artist_id)
+        except Exception as err:
+            raise MediaNotFoundError(f"Artist not found: {prov_artist_id}") from err
         return _artist_from_bc(art, self.domain, self.instance_id)
 
     async def get_artist_toptracks(self, prov_artist_id: str) -> list[Track]:
