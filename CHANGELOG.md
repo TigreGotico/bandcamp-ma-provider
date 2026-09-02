@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1a3](https://github.com/TigreGotico/bandcamp-ma-provider/tree/0.1.1a3) (2026-09-02)
+
+[Full Changelog](https://github.com/TigreGotico/bandcamp-ma-provider/compare/0.1.1a2...0.1.1a3)
+
+**Merged pull requests:**
+
+- ci: point the license and release-preview triggers at dev [\#7](https://github.com/TigreGotico/bandcamp-ma-provider/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.1.1a2](https://github.com/TigreGotico/bandcamp-ma-provider/tree/0.1.1a2) (2026-09-01)
+
+[Full Changelog](https://github.com/TigreGotico/bandcamp-ma-provider/compare/0.1.1a1...0.1.1a2)
+
 ## [0.1.1a1](https://github.com/TigreGotico/bandcamp-ma-provider/tree/0.1.1a1) (2026-09-01)
 
 [Full Changelog](https://github.com/TigreGotico/bandcamp-ma-provider/compare/4ad2af4318afd6621ac77c0b914f620fe5be9d48...0.1.1a1)
